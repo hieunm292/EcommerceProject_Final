@@ -69,6 +69,7 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
     /**
      * @return unmodifiable copy of the map
      */
+
     @Override
     public Map<Product, Integer> getProductsInCart() {
         return Collections.unmodifiableMap(products);
@@ -79,18 +80,22 @@ public class ShoppingCartServiceImpl implements ShoppingCartService {
      *
      * @throws NotEnoughProductsInStockException
      */
+
     @Override
     public void checkout() throws NotEnoughProductsInStockException {
         Product product;
         for (Map.Entry<Product, Integer> entry : products.entrySet()) {
             // Refresh quantity for every product before checking
-            product = productRepository.findOne(entry.getKey().getId());
+            product = productRepository.findById(entry.getKey().getId()).get();
             if (product.getQuantity() < entry.getValue())
                 throw new NotEnoughProductsInStockException(product);
             entry.getKey().setQuantity(product.getQuantity() - entry.getValue());
         }
-        productRepository.save(products.keySet());
-        productRepository.flush();
+
+        for (Map.Entry<Product, Integer> entry : products.entrySet()) {
+            productRepository.save(entry.getKey());
+            productRepository.flush();
+        }
         products.clear();
     }
 
